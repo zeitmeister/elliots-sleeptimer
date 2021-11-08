@@ -11,7 +11,12 @@ bool wakeNow = false;
 const char* ssid = "";
 const char* password = "";
 const long utcOffsetInSeconds = 3600;
-
+byte ledOnPins[] ={5, 4, 0, 2};
+int ledDelay(65); // delay changes
+int leddirection = 1;
+int ledcurrentLED = 0;
+unsigned long changeTime;
+ 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
@@ -30,8 +35,13 @@ void setup_wifi(){
 
 
 void setup() {
+
+  for (int x=0; x<4; x++) {
+    pinMode(ledOnPins[x], OUTPUT); 
+  } // set all pins to output
+   changeTime = millis();
   // put your setup code here, to run once:
-  pinMode(ledon, OUTPUT);
+
   pinMode(ledoff, OUTPUT);
   Serial.begin(9600);
   setup_wifi();
@@ -39,6 +49,10 @@ void setup() {
 }
 
 void loop() {
+  if ((millis() - changeTime) > ledDelay) { // if it has been ledDelay ms since last change
+    changeLED();
+    changeTime = millis();
+  }
   // put your main code here, to run repeatedly:
   timeClient.update();
   if (timeClient.getHours() == 6 && timeClient.getMinutes() == 30){
@@ -46,7 +60,7 @@ void loop() {
     sleepMore = false;
     
   }
-  if (timeClient.getHours() == 21 && timeClient.getMinutes() == 0) {
+  if (timeClient.getHours() == 19 && timeClient.getMinutes() == 0) {
     sleepMore = true;
     wakeNow = false;
   }
@@ -63,4 +77,18 @@ void loop() {
     digitalWrite(ledoff, LOW);
   }
   
+}
+
+void changeLED() {
+for (int x=0; x<4; x++) {    // Increment x++
+digitalWrite(ledOnPins[x], LOW);
+}
+ 
+digitalWrite(ledOnPins[ledcurrentLED], HIGH); // Turning on the current LED          
+ledcurrentLED += leddirection; // increment the direction by value
+ 
+// changing the direction if we reach the last LED
+if (ledcurrentLED == 3) {leddirection = -1;}
+if (ledcurrentLED == 0) {leddirection = 1;}
+ 
 }
